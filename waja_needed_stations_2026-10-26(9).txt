@@ -1,0 +1,29 @@
+=== 9A5CW WAJA LOGGED NEEDED STATIONS ===
+Datum izvoza: 2026-10-26T20:41:22.376Z
+
+Opseg: 160M | Prefektura: Aomori | Pozivni znak: JR7GBL | Lokator: QN00gp | Freq: 1.842 MHz | Mod: FT8 | SNR: -10 dB | Vrijeme: 20:08:34 UTC | Slušao: JA2KRE
+Opseg: 80M | Prefektura: Shiga | Pozivni znak: JO3WJJ | Lokator: PM85CG | Freq: 3.568 MHz | Mod: FREEDV | SNR: 8 dB | Vrijeme: 20:10:39 UTC | Slušao: JA6VAG
+Opseg: 160M | Prefektura: Aomori | Pozivni znak: JH7BKN | Lokator: QN00er | Freq: 1.843 MHz | Mod: FT8 | SNR: 3 dB | Vrijeme: 20:14:09 UTC | Slušao: JA1KNB
+Opseg: 80M | Prefektura: Kanagawa | Pozivni znak: JK1QHK | Lokator: PM95so | Freq: 3.574 MHz | Mod: FT8 | SNR: 17 dB | Vrijeme: 20:14:23 UTC | Slušao: JA9BFN
+Opseg: 80M | Prefektura: Saitama | Pozivni znak: JF1WPB | Lokator: PM95wt43 | Freq: 3.575 MHz | Mod: FT8 | SNR: 6 dB | Vrijeme: 20:15:04 UTC | Slušao: JH7RXU
+Opseg: 80M | Prefektura: Yamaguchi | Pozivni znak: JH4ALY | Lokator: PM54pc | Freq: 3.574 MHz | Mod: FT8 | SNR: 1 dB | Vrijeme: 20:15:04 UTC | Slušao: JH7RXU
+Opseg: 80M | Prefektura: Yamaguchi | Pozivni znak: JA4DWR | Lokator: PM63aw | Freq: 3.574 MHz | Mod: FT8 | SNR: -1 dB | Vrijeme: 20:15:04 UTC | Slušao: JH7RXU
+Opseg: 80M | Prefektura: Miyazaki | Pozivni znak: JH6QOK | Lokator: PM51MR | Freq: 3.576 MHz | Mod: FT8 | SNR: 6 dB | Vrijeme: 20:16:34 UTC | Slušao: JK1QLQ
+Opseg: 80M | Prefektura: Yamagata | Pozivni znak: JA7ECU | Lokator: QM08AX | Freq: 3.568 MHz | Mod: FREEDV | SNR: 18 dB | Vrijeme: 20:16:40 UTC | Slušao: JF1ILB
+Opseg: 160M | Prefektura: Oita | Pozivni znak: JH6EFI | Lokator: PM53te09 | Freq: 1.842 MHz | Mod: FT8 | SNR: 9 dB | Vrijeme: 20:17:34 UTC | Slušao: JR2LJO
+Opseg: 30M | Prefektura: Hokkaido | Pozivni znak: JA8KSF | Lokator: QN03sb28 | Freq: 10.137 MHz | Mod: FT8 | SNR: -3 dB | Vrijeme: 20:24:19 UTC | Slušao: IU7GRJ
+Opseg: 30M | Prefektura: Shiga | Pozivni znak: JG3IWL | Lokator: PM75xa61 | Freq: 10.136 MHz | Mod: FT8 | SNR: 3 dB | Vrijeme: 20:24:19 UTC | Slušao: JH0JLP
+Opseg: 30M | Prefektura: Akita | Pozivni znak: JE7JDL | Lokator: QM09LM | Freq: 10.137 MHz | Mod: FT8 | SNR: 6 dB | Vrijeme: 20:24:19 UTC | Slušao: JH0JLP
+Opseg: 30M | Prefektura: Aichi | Pozivni znak: JH2CHY | Lokator: PM85LH | Freq: 10.138 MHz | Mod: FT8 | SNR: -10 dB | Vrijeme: 20:24:19 UTC | Slušao: JH0JLP
+Opseg: 30M | Prefektura: Ehime | Pozivni znak: JH5HDA | Lokator: PM63LM | Freq: 10.136 MHz | Mod: FT8 | SNR: -13 dB | Vrijeme: 20:24:23 UTC | Slušao: AH6EZ
+Opseg: 30M | Prefektura: Aichi | Pozivni znak: JA2ORW | Lokator: PM85LB | Freq: 10.137 MHz | Mod: FT8 | SNR: -8 dB | Vrijeme: 20:24:27 UTC | Slušao: OE3GBB
+Opseg: 30M | Prefektura: Nagano | Pozivni znak: JA0CVC | Lokator: PM96CP | Freq: 10.138 MHz | Mod: FT8 | SNR: -20 dB | Vrijeme: 20:24:28 UTC | Slušao: S54L
+Opseg: 30M | Prefektura: Miyagi | Pozivni znak: JA7BXS | Lokator: QM08mr13 | Freq: 10.137 MHz | Mod: FT8 | SNR: -2 dB | Vrijeme: 20:24:29 UTC | Slušao: DK8FT
+Opseg: 30M | Prefektura: Hokkaido | Pozivni znak: JA8RHU | Lokator: QN04ui | Freq: 10.137 MHz | Mod: FT8 | SNR: -9 dB | Vrijeme: 20:27:04 UTC | Slušao: JG8LOL
+Opseg: 80M | Prefektura: Akita | Pozivni znak: JH7VTE | Lokator: QM09AT | Freq: 3.575 MHz | Mod: FT8 | SNR: -10 dB | Vrijeme: 20:27:24 UTC | Slušao: BH4HKZ
+Opseg: 30M | Prefektura: Tokyo | Pozivni znak: 7N4BAI | Lokator: PM95TQ | Freq: 10.137 MHz | Mod: FT8 | SNR: -8 dB | Vrijeme: 20:27:44 UTC | Slušao: JF1DHM
+Opseg: 30M | Prefektura: Hokkaido | Pozivni znak: JA8BKI | Lokator: QN02LM | Freq: 10.137 MHz | Mod: FT8 | SNR: -25 dB | Vrijeme: 20:27:49 UTC | Slušao: W7BA
+Opseg: 160M | Prefektura: Okinawa | Pozivni znak: JS6TWW | Lokator: PL55ou70 | Freq: 1.840 MHz | Mod: FT8 | SNR: -8 dB | Vrijeme: 20:33:03 UTC | Slušao: JH6QOK
+Opseg: 80M | Prefektura: Ibaraki | Pozivni znak: JF1ILB | Lokator: PM96VC | Freq: 3.568 MHz | Mod: FREEDV | SNR: 12 dB | Vrijeme: 20:34:48 UTC | Slušao: JA7ECU
+Opseg: 20M | Prefektura: Kyoto | Pozivni znak: JK3NQV | Lokator: PM74vr53 | Freq: 14.076 MHz | Mod: FT8 | SNR: -1 dB | Vrijeme: 20:39:49 UTC | Slušao: VK2MBK
+Opseg: 160M | Prefektura: Ishikawa | Pozivni znak: JA9RRH | Lokator: PM87ok | Freq: 1.842 MHz | Mod: FT8 | SNR: 7 dB | Vrijeme: 20:41:03 UTC | Slušao: JF3OWJ

@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>9A5CW Worldwide PSK Reporter spots — Japan DXCC 339 WAJA Logger</title>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#101820;--panel:#192630;--border:#354652;--text:#e6edf3;--muted:#9aabb8;--accent:#61dafb}*{box-sizing:border-box}body{margin:0;padding:22px;background:var(--bg);color:var(--text);font:14px Arial,sans-serif}h1{color:var(--accent);margin-bottom:6px}h2{font-size:17px;margin-top:24px}p{color:var(--muted)}.stats{display:flex;flex-wrap:wrap;gap:22px}.stat strong{color:var(--accent);font-size:19px}.status{color:#f6c86a}.small{font-size:12px;color:var(--muted)}
+.signal-toolbar{display:flex;align-items:stretch;flex-wrap:wrap;gap:9px;background:#111b28;border:1px solid #314457;padding:10px;border-radius:7px;margin:16px 0}
+.band-strip{display:flex;flex-wrap:wrap;gap:4px;flex:1 1 auto}
+.band-chip,.signal-chip{background:#182738;border:1px solid #35485f;color:#e5eef9;border-radius:5px;cursor:pointer;min-width:62px;padding:7px 5px;font-size:13px;font-weight:bold;text-align:center}
+.band-chip small,.signal-chip small{display:block;color:#f6c86a;font-size:10px;font-weight:normal;margin-top:3px;line-height:1.2}
+.band-chip.active,.signal-chip.active{background:#069bd6;border-color:#43c8ff;color:#fff}
+.band-chip.active small,.signal-chip.active small{color:#fff}
+
+/* Animacija crvenog treperenja za opsege */
+@keyframes redBlink {
+  0% { background-color: #182738; border-color: #35485f; }
+  50% { background-color: #8b2626; border-color: #ff4045; color: #fff; }
+  100% { background-color: #182738; border-color: #35485f; }
+}
+.band-chip.alert-blink {
+  animation: redBlink 1s infinite;
+}
+
+.toolbar-section{display:flex;flex-direction:column;gap:5px;border-left:1px solid #304256;padding-left:10px}
+.toolbar-caption{font-size:10px;letter-spacing:1px;color:#a4c7e9;font-weight:bold}
+.toolbar-section select{padding:6px;background:#101820;color:#fff;border:1px solid #354652;border-radius:4px}
+
+.prefecture-panel { background: #15222e; border: 1px solid #314457; border-radius: 7px; padding: 14px; margin: 16px 0; }
+.prefecture-panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+.prefecture-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; max-height: 220px; overflow-y: auto; padding: 4px; border: 1px solid #233544; border-radius: 5px; background: #101820; }
+.prefecture-item { display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; user-select: none; }
+.prefecture-item input { accent-color: #069bd6; width: 15px; height: 15px; cursor: pointer; }
+.pref-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.pref-actions button { padding: 5px 10px; font-size: 11px; background: #1d3344; border: 1px solid #3c566e; cursor: pointer; color: #fff; border-radius: 4px; }
+.pref-actions button:hover { background: #28475f; }
+
+.spot-details-section{margin-top:22px;min-width:0}
+.spot-details-wrap{max-height:none;overflow:visible;border:1px solid var(--border);border-radius:7px}
+.spot-details-table{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}
+.spot-details-table th,.spot-details-table td{padding:8px 10px;text-align:left;border-bottom:1px solid #354652}
+.spot-details-table thead th{position:sticky;top:0;background:#1b2b39;z-index:1}
+.spot-details-table tbody tr:hover{background:#243541}
+.page-subtitle{display:block;font-size:.58em;font-weight:400;line-height:1.45;color:var(--muted);margin-top:5px}
+.jp-tag{color:#61dafb;font-weight:bold;font-size:11px;margin-left:4px}
+
+.logged-section { margin-top: 20px; border: 1px solid #61dafb; border-radius: 7px; padding: 14px; background: #14202c; }
+.logged-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+.logged-header h2 { margin: 0; color: #61dafb; font-size: 18px; }
+.logged-table-wrap { max-height: none; overflow: visible; border: 1px solid var(--border); border-radius: 5px; }
+.logged-table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+.logged-table th, .logged-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #354652; }
+.logged-table thead th { position: sticky; top: 0; background: #0f2b3c; color: #61dafb; z-index: 1; }
+.logged-table tbody tr:hover { background: #1c3347; }
+
+.toggle-label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; color: #fff; user-select: none; }
+.toggle-label input { accent-color: #069bd6; width: 16px; height: 16px; cursor: pointer; }
+</style></head>
+<body>
+<h1>9A5CW Worldwide PSK Reporter spots<span class="page-subtitle">Japan DXCC 339 WAJA Logger (Optimized Bandwidth)</span></h1>
+
+<div class="stats">
+  <div class="stat">Connection<br><strong id="status" class="status">Starting…</strong></div>
+  <div class="stat">Data Processed<br><strong id="dataProcessed" style="color:#61dafb">0.00 MB</strong></div>
+  <div class="stat">Japan Spots (Buffer)<br><strong id="total">0</strong></div>
+  <div class="stat">Matched spots<br><strong id="filteredTotal">0</strong></div>
+  <div class="stat">Logged Needed Calls<br><strong id="loggedTotal" style="color:#61dafb">0</strong></div>
+  <div class="stat">Japan CSV<br><strong id="csvStatus" style="color:#f6c86a">Loading…</strong></div>
+  <div class="stat">Needed Prefs<br><strong id="prefsStatus" style="color:#f6c86a">Loading…</strong></div>
+</div>
+
+<div class="signal-toolbar" aria-label="Live propagation filters">
+  <div class="band-strip" id="bandButtons" aria-label="Select band">
+    <button type="button" class="band-chip active" data-band="+" aria-pressed="true">ALL<small id="countAll">47/47<br>0/0 needed</small></button>
+  </div>
+  <div class="toolbar-section">
+    <span class="toolbar-caption">PRIKAZ SPOTOVA</span>
+    <select id="rowLimitSelect">
+      <option value="20">Zadnjih 20</option>
+      <option value="50" selected>Zadnjih 50</option>
+      <option value="100">Zadnjih 100</option>
+      <option value="200">Zadnjih 200</option>
+    </select>
+  </div>
+  <div class="toolbar-section">
+    <span class="toolbar-caption">OPCIJE PRIKAZA</span>
+    <label class="toggle-label">
+      <input type="checkbox" id="hideLiveStreamCheck" checked> Sakrij Live Stream
+    </label>
+  </div>
+</div>
+
+<div id="prefecturePanelContainer" class="prefecture-panel" style="display:none;">
+  <div class="prefecture-panel-header">
+    <span class="toolbar-caption" id="panelTitle">NEEDED PREFECTURES FOR BAND</span>
+    <div class="pref-actions">
+      <button type="button" id="selectAllPrefs">Označi sve</button>
+      <button type="button" id="deselectAllPrefs">Poništi sve</button>
+    </div>
+  </div>
+  <div class="prefecture-grid" id="prefectureCheckboxGrid"></div>
+</div>
+
+<section class="spot-details-section" id="liveStreamSection" style="display:none;" aria-label="Live spot details">
+  <h2>Live spot stream (Japan DXCC 339) — <span id="spotDetailsCount">0</span> matching spots</h2>
+  <div class="spot-details-wrap">
+    <table class="spot-details-table">
+      <thead><tr><th>Time (UTC)</th><th>Band</th><th>Frequency (MHz)</th><th>Mode</th><th>TX callsign</th><th>TX locator</th><th>RX callsign</th><th>RX locator</th><th>SNR (dB)</th><th>Distance (km)</th></tr></thead>
+      <tbody id="spotDetailsBody"><tr><td colspan="10">Waiting for spots and databases…</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="logged-section">
+  <div class="logged-header">
+    <h2>🎯 Pronađene tražene prefekture (Zabilježene stanice)</h2>
+    <div class="pref-actions">
+      <button type="button" id="exportTxtBtn" style="background:#145b76;">Preuzmi TX (.txt)</button>
+      <button type="button" id="clearLoggedBtn" style="background:#8b2626;">Očisti zabilježeno</button>
+    </div>
+  </div>
+  <div class="logged-table-wrap">
+    <table class="logged-table">
+      <thead>
+        <tr>
+          <th>Zadnje uočeno (UTC)</th>
+          <th>Opseg (Band)</th>
+          <th>Prefektura</th>
+          <th>TX Callsign</th>
+          <th>TX Lokator</th>
+          <th>Frekvencija (MHz)</th>
+          <th>Mod</th>
+          <th>SNR (dB)</th>
+          <th>RX Callsign (Slušao)</th>
+        </tr>
+      </thead>
+      <tbody id="loggedTableBody">
+        <tr><td colspan="9">Niti jedna tražena stanica još nije zabilježena…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script>
+(() => {
+    const PREFECTURES = {
+        "01": "Hokkaido", "02": "Aomori", "03": "Iwate", "04": "Akita", "05": "Yamagata",
+        "06": "Miyagi", "07": "Fukushima", "08": "Niigata", "09": "Nagano", "10": "Tokyo",
+        "11": "Kanagawa", "12": "Chiba", "13": "Saitama", "14": "Ibaraki", "15": "Tochigi",
+        "16": "Gunma", "17": "Yamanashi", "18": "Shizuoka", "19": "Gifu", "20": "Aichi",
+        "21": "Mie", "22": "Kyoto", "23": "Shiga", "24": "Nara", "25": "Osaka",
+        "26": "Wakayama", "27": "Hyogo", "28": "Toyama", "29": "Fukui", "30": "Ishikawa",
+        "31": "Okayama", "32": "Shimane", "33": "Yamaguchi", "34": "Tottori", "35": "Hiroshima",
+        "36": "Kagawa", "37": "Tokushima", "38": "Ehime", "39": "Kochi", "40": "Fukuoka",
+        "41": "Saga", "42": "Nagasaki", "43": "Kumamoto", "44": "Oita", "45": "Miyazaki",
+        "46": "Kagoshima", "47": "Okinawa"
+    };
+
+    const BANDS_LIST = ["160m", "80m", "60m", "40m", "30m", "20m", "17m", "15m", "12m", "10m", "6m"];
+    
+    let callsignToPrefecture = {};
+    let isCsvLoaded = false;
+    let isPrefsLoaded = false;
+    let selectedBand = '+';
+    let maxDisplayRows = 50;
+    
+    let totalBytesReceived = 0;
+
+    function loadLoggedFromStorage() {
+        try {
+            const data = localStorage.getItem('waja_logged_calls');
+            if (data) {
+                return new Map(JSON.parse(data));
+            }
+        } catch(e) {
+            console.warn("Greška pri učitavanju iz localStorage:", e);
+        }
+        return new Map();
+    }
+
+    function saveLoggedToStorage() {
+        try {
+            const arr = Array.from(loggedCallsMap.entries());
+            localStorage.setItem('waja_logged_calls', JSON.stringify(arr));
+        } catch(e) {
+            console.warn("Greška pri spremanju u localStorage:", e);
+        }
+    }
+
+    const loggedCallsMap = loadLoggedFromStorage();
+
+    function playBeep() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.15);
+        } catch (e) {}
+    }
+
+    const bandPrefectureFilters = {};
+    BANDS_LIST.forEach(b => {
+        bandPrefectureFilters[b] = {};
+        Object.values(PREFECTURES).forEach(prefName => {
+            bandPrefectureFilters[b][prefName] = false; 
+        });
+    });
+
+    const bandStrip = document.getElementById('bandButtons');
+    BANDS_LIST.forEach(b => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'band-chip';
+        btn.dataset.band = b;
+        btn.setAttribute('aria-pressed', 'false');
+        btn.innerHTML = `${b.toUpperCase()}<small id="count_${b}">47/47<br>0/0 needed</small>`;
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.band-chip').forEach(c => { c.classList.remove('active'); c.setAttribute('aria-pressed', 'false'); });
+            btn.classList.add('active');
+            btn.setAttribute('aria-pressed', 'true');
+            selectedBand = b;
+            btn.classList.remove('alert-blink');
+            updatePrefecturePanel();
+            scheduleRender();
+        });
+        bandStrip.appendChild(btn);
+    });
+
+    const allBtn = bandStrip.querySelector('[data-band="+"]');
+    if (allBtn) {
+        allBtn.addEventListener('click', () => {
+            document.querySelectorAll('.band-chip').forEach(c => { c.classList.remove('active'); c.setAttribute('aria-pressed', 'false'); });
+            allBtn.classList.add('active');
+            allBtn.setAttribute('aria-pressed', 'true');
+            selectedBand = '+';
+            allBtn.classList.remove('alert-blink');
+            updatePrefecturePanel();
+            scheduleRender();
+        });
+    }
+
+    document.getElementById('rowLimitSelect').addEventListener('change', (e) => {
+        maxDisplayRows = parseInt(e.target.value, 10);
+        scheduleRender();
+    });
+
+    const hideLiveStreamCheck = document.getElementById('hideLiveStreamCheck');
+    const liveStreamSection = document.getElementById('liveStreamSection');
+
+    hideLiveStreamCheck.addEventListener('change', (e) => {
+        liveStreamSection.style.display = e.target.checked ? 'none' : 'block';
+    });
+
+    document.getElementById('clearLoggedBtn').addEventListener('click', () => {
+        if (confirm("Jeste li sigurni da želite očistiti sve zabilježene stanice?")) {
+            loggedCallsMap.clear();
+            saveLoggedToStorage();
+            scheduleRender();
+        }
+    });
+
+    document.getElementById('exportTxtBtn').addEventListener('click', () => {
+        const loggedArray = Array.from(loggedCallsMap.values());
+        if (loggedArray.length === 0) {
+            alert("Nema zabilježenih stanica za izvoz!");
+            return;
+        }
+
+        let lines = [
+            "=== 9A5CW WAJA LOGGED NEEDED STATIONS ===",
+            "Datum izvoza: " + new Date().toISOString(),
+            ""
+        ];
+
+        loggedArray.forEach(item => {
+            lines.push(`Opseg: ${item.band} | Prefektura: ${item.pref} | Pozivni znak: ${item.call} | Lokator: ${item.loc} | Freq: ${item.freq} MHz | Mod: ${item.mode} | SNR: ${item.snr} dB | Vrijeme: ${item.time} UTC | Slušao: ${item.rxCall}`);
+        });
+
+        const textContent = lines.join('\r\n');
+
+        const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `waja_needed_stations_${new Date().toISOString().slice(0,10)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+
+    function updatePrefecturePanel() {
+        const panel = document.getElementById('prefecturePanelContainer');
+        const grid = document.getElementById('prefectureCheckboxGrid');
+        const title = document.getElementById('panelTitle');
+
+        if (selectedBand === '+') {
+            panel.style.display = 'none';
+            return;
+        }
+
+        panel.style.display = 'block';
+        title.textContent = `NEEDED PREFECTURES FOR ${selectedBand.toUpperCase()} BAND`;
+        grid.innerHTML = '';
+
+        const sortedPrefs = Object.values(PREFECTURES).sort();
+        sortedPrefs.forEach(prefName => {
+            const isChecked = bandPrefectureFilters[selectedBand][prefName] === true;
+
+            const label = document.createElement('label');
+            label.className = 'prefecture-item';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = isChecked;
+            checkbox.addEventListener('change', (e) => {
+                bandPrefectureFilters[selectedBand][prefName] = e.target.checked;
+                scheduleRender();
+            });
+
+            const span = document.createElement('span');
+            span.textContent = prefName;
+
+            label.appendChild(checkbox);
+            label.appendChild(span);
+            grid.appendChild(label);
+        });
+    }
+
+    document.getElementById('selectAllPrefs').addEventListener('click', () => {
+        if (selectedBand === '+') return;
+        Object.keys(bandPrefectureFilters[selectedBand]).forEach(pref => {
+            bandPrefectureFilters[selectedBand][pref] = true;
+        });
+        updatePrefecturePanel();
+        scheduleRender();
+    });
+
+    document.getElementById('deselectAllPrefs').addEventListener('click', () => {
+        if (selectedBand === '+') return;
+        Object.keys(bandPrefectureFilters[selectedBand]).forEach(pref => {
+            bandPrefectureFilters[selectedBand][pref] = false;
+        });
+        updatePrefecturePanel();
+        scheduleRender();
+    });
+
+    async function loadJapanCsvDatabase(filename = 'japan_calls.csv') {
+        try {
+            const response = await fetch(filename + '?t=' + Date.now());
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const text = await response.text();
+            
+            const lines = text.split(/\r?\n/);
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                const parts = line.split(',');
+                if (parts.length >= 2) {
+                    const callsign = parts[0].trim().toUpperCase();
+                    const prefName = parts[1].trim();
+                    callsignToPrefecture[callsign] = prefName;
+                }
+            }
+            isCsvLoaded = true;
+            const count = Object.keys(callsignToPrefecture).length;
+            const csvStatusEl = document.getElementById('csvStatus');
+            if(csvStatusEl) {
+                csvStatusEl.textContent = `Loaded (${count})`;
+                csvStatusEl.style.color = '#8bcf69';
+            }
+            scheduleRender();
+        } catch (err) {
+            console.warn("Greška pri učitavanju CSV baze:", err);
+            const csvStatusEl = document.getElementById('csvStatus');
+            if(csvStatusEl) {
+                csvStatusEl.textContent = 'Failed';
+                csvStatusEl.style.color = '#ff4045';
+            }
+        }
+    }
+
+    async function loadNeededPrefs(filename = 'needed_prefs.txt') {
+        try {
+            const response = await fetch(filename + '?t=' + Date.now());
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const text = await response.text();
+            
+            BANDS_LIST.forEach(b => {
+                Object.keys(bandPrefectureFilters[b]).forEach(prefName => {
+                    bandPrefectureFilters[b][prefName] = false;
+                });
+            });
+
+            const lines = text.split(/\r?\n/);
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line || !line.includes(':')) return;
+                const parts = line.split(':');
+                let bandKey = parts[0].trim().toLowerCase();
+                
+                if (bandKey === '1.8' || bandKey === '1.8m' || bandKey === '160') bandKey = '160m';
+
+                const prefsStr = parts[1].trim();
+                
+                if (bandPrefectureFilters[bandKey]) {
+                    if (prefsStr) {
+                        const prefs = prefsStr.split(',').map(p => p.trim());
+                        prefs.forEach(pref => {
+                            const matchedPref = Object.values(PREFECTURES).find(p => p.toLowerCase() === pref.toLowerCase());
+                            if (matchedPref) {
+                                bandPrefectureFilters[bandKey][matchedPref] = true;
+                            }
+                        });
+                    }
+                }
+            });
+
+            isPrefsLoaded = true;
+            const prefsStatusEl = document.getElementById('prefsStatus');
+            if(prefsStatusEl) {
+                prefsStatusEl.textContent = 'Loaded';
+                prefsStatusEl.style.color = '#8bcf69';
+            }
+            updatePrefecturePanel();
+            scheduleRender();
+        } catch (err) {
+            console.warn("Greška pri učitavanju needed_prefs.txt:", err);
+            const prefsStatusEl = document.getElementById('prefsStatus');
+            if(prefsStatusEl) {
+                prefsStatusEl.textContent = 'Failed';
+                prefsStatusEl.style.color = '#ff4045';
+            }
+        }
+    }
+
+    loadJapanCsvDatabase('japan_calls.csv');
+    loadNeededPrefs('needed_prefs.txt');
+
+    function getJapanesePrefectureDetails(callsign) {
+        if (!isCsvLoaded || !callsign) return null;
+        const cleanCall = callsign.toUpperCase().trim();
+        return callsignToPrefecture[cleanCall] || null;
+    }
+
+    let spots = [];
+    let dirty = true, renderTimer = null;
+
+    function scheduleRender(){
+        dirty = true;
+        if(renderTimer !== null) return;
+        renderTimer = setTimeout(()=>{renderTimer = null; if(dirty){dirty = false; render();}}, 300);
+    }
+
+    function checkAndLogNeededSpot(spot) {
+        const spotBand = spot.band;
+        if (!bandPrefectureFilters[spotBand]) return;
+
+        const txPref = getJapanesePrefectureDetails(spot.txCall);
+        if (txPref && bandPrefectureFilters[spotBand][txPref] === true) {
+            const key = `${spotBand}_${spot.txCall.toUpperCase()}`;
+            const isNew = !loggedCallsMap.has(key);
+
+            if (isNew) {
+                loggedCallsMap.set(key, {
+                    time: spot.time,
+                    band: spotBand.toUpperCase(),
+                    pref: txPref,
+                    call: spot.txCall,
+                    loc: spot.txLoc || '—',
+                    freq: spot.freq,
+                    mode: spot.mode,
+                    snr: spot.snr,
+                    rxCall: spot.rxCall || '—'
+                });
+                
+                saveLoggedToStorage();
+                playBeep();
+
+                if (selectedBand.toLowerCase() !== spotBand.toLowerCase()) {
+                    const bandBtn = document.querySelector(`.band-chip[data-band="${spotBand}"]`);
+                    if (bandBtn) {
+                        bandBtn.classList.add('alert-blink');
+                    }
+                }
+            }
+        }
+    }
+
+    function validateSpot(spot) {
+        const spotBand = spot.band;
+        
+        if (selectedBand !== '+' && spotBand !== selectedBand.toLowerCase()) {
+            return false;
+        }
+
+        if (selectedBand !== '+') {
+            const txPref = getJapanesePrefectureDetails(spot.txCall);
+            const rxPref = getJapanesePrefectureDetails(spot.rxCall);
+            
+            if (txPref || rxPref) {
+                const txNeeded = txPref ? (bandPrefectureFilters[selectedBand][txPref] === true) : false;
+                const rxNeeded = rxPref ? (bandPrefectureFilters[selectedBand][rxPref] === true) : false;
+                
+                if (!txNeeded && !rxNeeded) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function render() {
+        const detailsBody = document.getElementById('spotDetailsBody');
+        const loggedBody = document.getElementById('loggedTableBody');
+        if (!detailsBody || !loggedBody) return;
+        
+        const mb = totalBytesReceived / (1024 * 1024);
+        const dataStr = mb >= 1024 ? `${(mb / 1024).toFixed(2)} GB` : `${mb.toFixed(2)} MB`;
+        document.getElementById('dataProcessed').textContent = dataStr;
+
+        const bandUniquePrefs = {};
+        BANDS_LIST.forEach(b => bandUniquePrefs[b] = new Set());
+        loggedCallsMap.forEach(item => {
+            const bKey = item.band.toLowerCase();
+            if (bandUniquePrefs[bKey]) {
+                bandUniquePrefs[bKey].add(item.pref);
+            }
+        });
+
+        const allUniquePrefs = new Set();
+        loggedCallsMap.forEach(item => allUniquePrefs.add(item.pref));
+        
+        // Ažuriranje brojača prema novoj logici:
+        // Gornji red = (47 - broj needed prefektura za taj band) / 47
+        // Donji red = detektiranih / ukupno potrebnih needed (npr. 7/11 needed)
+        BANDS_LIST.forEach(b => {
+            let totalNeededForBand = 0;
+            let workedNeededCount = 0;
+
+            if (bandPrefectureFilters[b]) {
+                Object.entries(bandPrefectureFilters[b]).forEach(([prefName, isNeeded]) => {
+                    if (isNeeded === true) {
+                        totalNeededForBand++;
+                        if (bandUniquePrefs[b].has(prefName)) {
+                            workedNeededCount++;
+                        }
+                    }
+                });
+            }
+
+            const topCount = Math.max(0, 47 - totalNeededForBand);
+            const el = document.getElementById(`count_${b}`);
+            if (el) {
+                el.innerHTML = `${topCount}/47<br><span style="color:#f6c86a;">${workedNeededCount}/${totalNeededForBand} needed</span>`;
+            }
+        });
+
+        let totalAllNeeded = 0;
+        let workedAllNeeded = 0;
+        BANDS_LIST.forEach(b => {
+            if (bandPrefectureFilters[b]) {
+                Object.entries(bandPrefectureFilters[b]).forEach(([prefName, isNeeded]) => {
+                    if (isNeeded === true) {
+                        totalAllNeeded++;
+                        if (bandUniquePrefs[b] && bandUniquePrefs[b].has(prefName)) {
+                            workedAllNeeded++;
+                        }
+                    }
+                });
+            }
+        });
+
+        const topAllCount = Math.max(0, 47 - totalAllNeeded);
+        const allBtnEl = document.getElementById('countAll');
+        if (allBtnEl) {
+            allBtnEl.innerHTML = `${topAllCount}/47<br><span style="color:#f6c86a;">${workedAllNeeded}/${totalAllNeeded} needed</span>`;
+        }
+
+        const counts = {'+': spots.length};
+        BANDS_LIST.forEach(b => counts[b] = 0);
+        spots.forEach(s => {
+            const b = s.band;
+            if (counts[b] !== undefined) counts[b]++;
+        });
+
+        if (!hideLiveStreamCheck.checked) {
+            const filteredSpots = spots.filter(validateSpot).slice(0, maxDisplayRows);
+            document.getElementById('spotDetailsCount').textContent = filteredSpots.length;
+            document.getElementById('filteredTotal').textContent = filteredSpots.length;
+
+            if (filteredSpots.length === 0) {
+                detailsBody.innerHTML = `<tr><td colspan="10">Nema spotova koji zadovoljavaju odabrane kriterije (band: ${selectedBand})...</td></tr>`;
+            } else {
+                let html = '';
+                filteredSpots.forEach(spot => {
+                    const txPref = getJapanesePrefectureDetails(spot.txCall);
+                    const rxPref = getJapanesePrefectureDetails(spot.rxCall);
+                    
+                    const txDisplay = txPref ? `${spot.txCall} <span class="jp-tag">[${txPref}]</span>` : (spot.txCall || '—');
+                    const rxDisplay = rxPref ? `${spot.rxCall} <span class="jp-tag">[${rxPref}]</span>` : (spot.rxCall || '—');
+
+                    html += `<tr>
+                        <td>${spot.time || '—'}</td>
+                        <td>${spot.band.toUpperCase() || '—'}</td>
+                        <td>${spot.freq || '—'}</td>
+                        <td>${spot.mode || '—'}</td>
+                        <td>${txDisplay}</td>
+                        <td>${spot.txLoc || '—'}</td>
+                        <td>${rxDisplay}</td>
+                        <td>${spot.rxLoc || '—'}</td>
+                        <td>${spot.snr ?? '—'}</td>
+                        <td>${spot.dist || '—'}</td>
+                    </tr>`;
+                });
+                detailsBody.innerHTML = html;
+            }
+        }
+
+        const loggedArray = Array.from(loggedCallsMap.values());
+        
+        const filteredLogged = loggedArray.filter(item => {
+            if (selectedBand === '+') return true;
+            return item.band.toLowerCase() === selectedBand.toLowerCase();
+        });
+
+        document.getElementById('loggedTotal').textContent = loggedArray.length;
+
+        if (filteredLogged.length === 0) {
+            loggedBody.innerHTML = `<tr><td colspan="9">Niti jedna tražena stanica još nije zabilježena za odabrani opseg (${selectedBand})…</td></tr>`;
+        } else {
+            let loggedHtml = '';
+            filteredLogged.slice().reverse().forEach(item => {
+                loggedHtml += `<tr>
+                    <td>${item.time}</td>
+                    <td><strong>${item.band}</strong></td>
+                    <td><span class="jp-tag" style="font-size:12px;">${item.pref}</span></td>
+                    <td><strong style="color:#61dafb; font-size:13px;">${item.call}</strong></td>
+                    <td>${item.loc}</td>
+                    <td>${item.freq}</td>
+                    <td>${item.mode}</td>
+                    <td>${item.snr} dB</td>
+                    <td>${item.rxCall}</td>
+                </tr>`;
+            });
+            loggedBody.innerHTML = loggedHtml;
+        }
+    }
+
+    function initMqtt() {
+        const client = mqtt.connect('wss://mqtt.pskreporter.info:1886');
+        
+        client.on('connect', () => {
+            document.getElementById('status').textContent = 'Connected';
+            client.subscribe([
+                'pskr/filter/v2/+/+/+/+/+/+/339/+',
+                'pskr/filter/v2/+/+/+/+/+/+/+/339'
+            ]);
+        });
+
+        client.on('error', (err) => {
+            console.error('MQTT error:', err);
+            document.getElementById('status').textContent = 'Error';
+        });
+
+        client.on('message', (topic, payload) => {
+            try {
+                totalBytesReceived += payload.length;
+
+                const data = JSON.parse(payload.toString());
+                
+                let rawBand = (data.b || data.band || '').toLowerCase().trim();
+                if (rawBand === '1.8' || rawBand === '1.8m' || rawBand === '160') {
+                    rawBand = '160m';
+                }
+
+                const spot = {
+                    time: new Date().toISOString().slice(11,19),
+                    band: rawBand,
+                    freq: data.f ? (data.f / 1e6).toFixed(3) : (data.frequency ? (data.frequency / 1e6).toFixed(3) : '—'),
+                    mode: data.md || data.mode || '—',
+                    txCall: data.sc || data.senderCallsign || data.txCall || '',
+                    txLoc: data.sl || data.senderLocator || data.txLoc || '',
+                    rxCall: data.rc || data.receiverCallsign || data.rxCall || '',
+                    rxLoc: data.rl || data.receiverLocator || data.rxLoc || '',
+                    snr: data.rp ?? data.snr ?? '—',
+                    dist: data.d || data.distance || '—'
+                };
+                
+                checkAndLogNeededSpot(spot);
+
+                spots.unshift(spot);
+                if (spots.length > 5000) spots.pop();
+                document.getElementById('total').textContent = spots.length;
+                scheduleRender();
+            } catch(e) {
+                console.warn('Greška kod parsiranja MQTT poruke:', e);
+            }
+        });
+    }
+
+    initMqtt();
+})();
+</script>
+</body>
+</html>
