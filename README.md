@@ -1,6 +1,6 @@
 # MQTT-pskreporter.info-Japan
 <p align="center">
-  <img src="images/slika.png" alt="Opis slike" width="600"/>
+  <img src="BOH_WAJA.png" alt="WAJA Script" width="600"/>
 </p>
 MQTT pskreporter.info Japan active stations monitoring system
 An advanced, web-based, and bandwidth-optimized real-time dashboard for tracking Japanese amateur radio stations (DXCC 339) via the **PSK Reporter MQTT** network, focusing on hunting for the **WAJA (Worked All Japan)** award.
