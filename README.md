@@ -4,8 +4,6 @@ An advanced, web-based, and bandwidth-optimized real-time dashboard for tracking
 
 Customized for station **9A5CW** with QTH locator **JN65XF**.
 ## Croatian:
-Ovdje je detaljan pregled svih mogućnosti koje izvršava vaša skripta, a odmah ispod se nalazi i kompletan **`README.md`** na engleskom jeziku spreman za vaš GitHub repozitorij.
-
 ### 📋 Opis svih mogućnosti i funkcija skripte
 
 Ova web aplikacija (Dashboard) dizajnirana je kao napredni radioamaterski alat za praćenje japanskih postaja (DXCC 339) i lov na **WAJA (Worked All Japan)** diplomu u stvarnom vremenu. Evo popisa ključnih funkcija koje skripta izvršava:
@@ -47,9 +45,8 @@ Ova web aplikacija (Dashboard) dizajnirana je kao napredni radioamaterski alat z
 
 ---
 
-# 🚀 README.md (English Version for GitHub)
+# 🚀 English Version
 
-```markdown
 # 9A5CW WAJA Logger (Japan DXCC 339 PSK Reporter Dashboard)
 
 An advanced, web-based, and bandwidth-optimized real-time dashboard for tracking Japanese amateur radio stations (DXCC 339) via the **PSK Reporter MQTT** network, focusing on hunting for the **WAJA (Worked All Japan)** award.
@@ -137,6 +134,7 @@ python -m http.server 8080
 ## 📜 License
 
 Developed for personal amateur radio operations (9A5CW).
+Buy me a coffee ;) https://www.paypal.com/paypalme/9a5cw
 
 ```
 
